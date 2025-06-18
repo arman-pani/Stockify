@@ -1,0 +1,72 @@
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/wishlistCardView"
+    android:layout_width="250dp"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="10dp"
+    android:layout_marginVertical="10dp"
+    app:cardCornerRadius="16dp"
+    app:strokeWidth="2dp">
+
+    <LinearLayout
+        android:padding="10dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <ImageView
+            android:id="@+id/companyLogoImageView"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:src="@drawable/add"
+            android:background="@drawable/imageview_logo_bg"
+            android:contentDescription="@null" />
+
+        <Space
+            android:layout_width="10dp"
+            android:layout_height="wrap_content"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:orientation="vertical"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/companySymbolTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="AMZN"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/companyNameTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Amazon, Inc."
+                android:textStyle="italic" />
+
+        </LinearLayout>
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1"/>
+
+
+        <TextView
+            android:id="@+id/percentageTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-0.23%"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:textColor="#E91E63"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+
+
+
+</com.google.android.material.card.MaterialCardView>
