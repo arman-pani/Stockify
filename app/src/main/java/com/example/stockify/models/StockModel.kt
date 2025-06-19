@@ -1,4 +1,4 @@
-package com.example.stockify
+package com.example.stockify.models
 class StockModel(
     val companyName: String,
     val companySymbol: String,

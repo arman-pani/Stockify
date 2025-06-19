@@ -1,4 +1,4 @@
-package com.example.stockify
+package com.example.stockify.adapters
 
 import android.view.LayoutInflater
 import android.view.View
@@ -6,6 +6,8 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.stockify.R
+import com.example.stockify.models.StockModel
 
 class StockItemAdapter(private val stockItems: List<StockModel>) : RecyclerView.Adapter<StockItemAdapter.ViewHolder>(){
 
@@ -28,8 +30,14 @@ class StockItemAdapter(private val stockItems: List<StockModel>) : RecyclerView.
         val item = stockItems[position]
         holder.companyNameTextView.text = item.companyName
         holder.companySymbolTextView.text = item.companySymbol
-        holder.percentageTextView.text = "${item.percentage}%"
-        holder.stockPriceTextView.text = "$${item.stockPrice}"
+      if (item.percentage < 0) {
+          holder.percentageTextView.setTextColor(holder.view.context.getColor(R.color.red))
+          holder.percentageTextView.text = String.format("-%.2f%%", -item.percentage)
+      } else {
+          holder.percentageTextView.setTextColor(holder.view.context.getColor(R.color.green))
+          holder.percentageTextView.text = String.format("+%.2f%%", item.percentage)
+      }
+      holder.stockPriceTextView.text = String.format("$%.2f", item.stockPrice)
     }
 
     override fun getItemCount() = stockItems.size

@@ -1,4 +1,4 @@
-package com.example.stockify
+package com.example.stockify.models
 
 data class WishlistModel(
     val companyName: String,

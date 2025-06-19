@@ -3,4 +3,6 @@
     <string name="stockify">Stockify</string>
     <string name="wishlist">Wishlist</string>
     <string name="stocks">Stocks</string>
+    <string name="watchlist">Watchlist</string>
+    <string name="major_indices">Major Indices</string>
 </resources>
