@@ -1,30 +1,35 @@
 package com.example.stockify.fragments
 
+import android.R
 import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.RectF
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.stockify.R
 import com.example.stockify.adapters.WatchlistAdapter
 import com.example.stockify.databinding.FragmentWatchlistBinding
-import com.example.stockify.models.StockModel
-import com.example.stockify.models.WishlistModel
+import com.example.stockify.room.WatchlistItemModel
+import com.example.stockify.viewModels.WatchlistViewModel
+import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator
+import java.util.Collections
 
-class WatchlistFragment: Fragment(R.layout.fragment_watchlist) {
+
+class WatchlistFragment: Fragment(com.example.stockify.R.layout.fragment_watchlist) {
 
     private var _binding: FragmentWatchlistBinding? = null
     private val binding get() = _binding!!
 
     private lateinit var adapter: WatchlistAdapter
     private lateinit var recyclerView: RecyclerView
+
+    private lateinit var viewModel: WatchlistViewModel
 
 
     override fun onCreateView(
@@ -34,61 +39,74 @@ class WatchlistFragment: Fragment(R.layout.fragment_watchlist) {
     ): View {
         _binding = FragmentWatchlistBinding.inflate(inflater, container, false)
         recyclerView = binding.watchlistRecyclerView
-        recyclerView.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(
-            context, androidx.recyclerview.widget.LinearLayoutManager.VERTICAL, false
-        )
-
-        val watchlist = mutableListOf(
-            StockModel("Tesla Inc.", "TSLA", "https://logo.clearbit.com/tesla.com", 4.5, 700.0),
-            StockModel("Amazon.com Inc.", "AMZN", "https://logo.clearbit.com/amazon.com", 2.8, 3300.0),
-            StockModel("Meta Platforms Inc.", "META", "https://logo.clearbit.com/meta.com", 1.2, 250.0)
-        )
-
-        adapter = WatchlistAdapter(watchlist) { position ->
-            adapter.removeItem(position)
+        recyclerView.layoutManager = object: LinearLayoutManager(context){
+            override fun canScrollVertically(): Boolean = false
         }
 
-        recyclerView.adapter = adapter
+        viewModel = ViewModelProvider(this)[WatchlistViewModel::class.java]
 
-        val itemTouchHelperCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+        viewModel.getWatchlist.observe(viewLifecycleOwner){ watchlist ->
+            adapter = WatchlistAdapter(watchlist, WatchlistAdapter.ViewType.VERTICAL)
+            recyclerView.adapter = adapter
+        }
+
+
+        val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT){
             override fun onMove(
-                recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder
-            ) = false
+                recyclerView: RecyclerView,
+                source: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+//                val sourcePosition = source.adapterPosition
+//                val targetPosition = target.adapterPosition
+//
+//                Collections.swap(watchlist, sourcePosition, targetPosition)
+//                adapter.notifyItemMoved(sourcePosition,targetPosition)
+                return true
+
+            }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val position = viewHolder.adapterPosition
-                adapter.removeItem(position)
+                viewModel.onDeleteItem(position)
+                adapter.notifyItemRemoved(position)
             }
 
             override fun onChildDraw(
-                c: Canvas, recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,
-                dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean
+                c: Canvas,
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                dX: Float,
+                dY: Float,
+                actionState: Int,
+                isCurrentlyActive: Boolean
             ) {
-                val itemView = viewHolder.itemView
-                val paint = Paint()
-                paint.color = Color.parseColor("#E91E63")
-                val background = RectF(
-                    itemView.right + dX, itemView.top.toFloat(),
-                    itemView.right.toFloat(), itemView.bottom.toFloat()
+
+                RecyclerViewSwipeDecorator.
+                Builder(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+                    .addBackgroundColor(
+                        ContextCompat.getColor(
+                            context,
+                            R.color.holo_red_dark
+                        )
+                    )
+                    .addActionIcon(R.drawable.ic_menu_add)
+                    .create()
+                    .decorate()
+
+                super.onChildDraw(
+                    c,
+                    recyclerView,
+                    viewHolder,
+                    dX,
+                    dY,
+                    actionState,
+                    isCurrentlyActive
                 )
-                c.drawRect(background, paint)
-
-                val icon = ContextCompat.getDrawable(recyclerView.context, R.drawable.increase)!!
-                val iconMargin = (itemView.height - icon.intrinsicHeight) / 2
-                val iconTop = itemView.top + (itemView.height - icon.intrinsicHeight) / 2
-                val iconBottom = iconTop + icon.intrinsicHeight
-                val iconLeft = itemView.right - iconMargin - icon.intrinsicWidth
-                val iconRight = itemView.right - iconMargin
-                icon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
-                icon.draw(c)
-
-                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
             }
-        }
 
-        val itemTouchHelper = ItemTouchHelper(itemTouchHelperCallback)
+        })
         itemTouchHelper.attachToRecyclerView(recyclerView)
-
         return binding.root
     }
 }

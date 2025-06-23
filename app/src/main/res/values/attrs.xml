@@ -1,0 +1,6 @@
+<resources>
+    <declare-styleable name="SectionHeaderView">
+        <attr name="headerTitle" format="string" />
+        <attr name="headerIcon" format="reference" />
+    </declare-styleable>
+</resources>

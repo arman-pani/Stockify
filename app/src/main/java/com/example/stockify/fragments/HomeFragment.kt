@@ -5,57 +5,105 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.stockify.R
-import com.example.stockify.adapters.IndexItemAdapter
-import com.example.stockify.adapters.StockItemAdapter
-import com.example.stockify.models.StockModel
-import com.example.stockify.adapters.HomeWatchlistItemAdapter
-import com.example.stockify.models.WishlistModel
+import com.example.stockify.adapters.*
 import com.example.stockify.databinding.FragmentHomeBinding
-import com.example.stockify.models.IndexModel
+import com.example.stockify.models.*
+import com.example.stockify.room.WatchlistItemModel
+import com.example.stockify.utils.FilterType
+import com.example.stockify.viewModels.HomeViewModel
+import com.example.stockify.viewModels.StockProfileViewModel
+import com.example.stockify.viewModels.StockProfileViewModelFactory
 
 class HomeFragment : Fragment(R.layout.fragment_home) {
-    private var _binding: FragmentHomeBinding? = null
-    private val binding get() = _binding!!
+
+    private lateinit var binding: FragmentHomeBinding
+    private lateinit var viewModel: HomeViewModel
+    private lateinit var stockViewModel : StockProfileViewModel
+
+    // Temporary data holders
+    private var indicesData: List<IndexModel>? = null
+    private var watchlistData: List<WatchlistItemModel>? = null
+    private var stocksData: List<StockModel>? = null
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentHomeBinding.inflate(inflater, container, false)
-        binding.indicesRecyclerView.layoutManager = LinearLayoutManager(
-            context, LinearLayoutManager.HORIZONTAL, false
-        )
-        binding.wishlistRecyclerView.layoutManager =
-            LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
-        binding.stocksRecyclerView.layoutManager =
-            LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+        binding = FragmentHomeBinding.inflate(inflater, container, false)
+        viewModel = ViewModelProvider(this)[HomeViewModel::class.java]
+        val factory = StockProfileViewModelFactory(requireContext().applicationContext)
+        stockViewModel = ViewModelProvider(this, factory)[StockProfileViewModel::class.java]
 
-        val indexItems = listOf(
-            IndexModel("S&P 500", 4500.0, 50.0, 1.1, "https://logo.clearbit.com/spglobal.com"),
-            IndexModel("NASDAQ", 15000.0, -100.0, -0.7, "https://logo.clearbit.com/nasdaq.com"),
-            IndexModel("Dow Jones", 35000.0, 200.0, 0.6, "https://logo.clearbit.com/dowjones.com")
-        )
-        val wishlistItems = listOf(
-            WishlistModel("Apple Inc.", "AAPL", "https://logo.clearbit.com/apple.com", 1.5),
-            WishlistModel("Google LLC", "GOOGL", "https://logo.clearbit.com/google.com", 2.3),
-            WishlistModel("Microsoft Corp.", "MSFT", "https://logo.clearbit.com/microsoft.com", 3.1)
-        )
-        val stockItems = listOf(
-            StockModel("Tesla Inc.", "TSLA", "https://logo.clearbit.com/tesla.com", 4.5, 700.0),
-            StockModel("Amazon.com Inc.", "AMZN", "https://logo.clearbit.com/amazon.com", 2.8, 3300.0),
-            StockModel("Meta Platforms Inc.", "META", "https://logo.clearbit.com/meta.com", 1.2, 250.0)
-        )
-        binding.indicesRecyclerView.adapter = IndexItemAdapter(indexItems)
-        binding.wishlistRecyclerView.adapter = HomeWatchlistItemAdapter(wishlistItems)
-        binding.stocksRecyclerView.adapter = StockItemAdapter(stockItems)
+        setupObservers()
+        showLoading(true)
+        viewModel.loadHomePageData()
+
         return binding.root
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+    private fun setupObservers() {
+        viewModel.indices.observe(viewLifecycleOwner) { indices ->
+            indicesData = indices
+            tryBuildHomeAdapter()
+        }
+
+        viewModel.watchlist.observe(viewLifecycleOwner) { watchlist ->
+            watchlistData = watchlist
+            tryBuildHomeAdapter()
+        }
+
+        viewModel.stocks.observe(viewLifecycleOwner) { stocks ->
+            stocksData = stocks
+            tryBuildHomeAdapter()
+        }
+    }
+
+    private fun tryBuildHomeAdapter() {
+        if (indicesData != null && watchlistData != null && stocksData != null) {
+
+            val homeItems = listOf(
+                HomeItem.SearchBar,
+
+                HomeItem.SectionHeader("Major Indices", R.drawable.indices),
+                HomeItem.HorizontalList(ListType.INDICES, indicesData!!),
+
+                HomeItem.SectionHeader("Watchlist", R.drawable.watchlist),
+                HomeItem.HorizontalList(ListType.WATCHLIST, watchlistData!!),
+
+                HomeItem.SectionHeader("Stocks", R.drawable.stocks),
+                HomeItem.HorizontalList(
+                    ListType.FILTER,
+                    listOf(
+                        FilterType.TREADING,
+                        FilterType.TOP_GAINERS,
+                        FilterType.TOP_LOSERS,
+                        FilterType.MOST_ACTIVE
+                    )
+                ),
+                HomeItem.VerticalList(stocksData!!)
+            )
+
+            binding.homeRecyclerView.apply {
+                layoutManager = LinearLayoutManager(requireContext())
+               adapter = HomeAdapter(
+                homeItems,
+                onFilterSelected = { filter: FilterType ->
+                    viewModel.currentStockFilter = filter
+                },
+                onStockItemTapListener = { stock: StockModel ->
+                    stockViewModel.setStockDetails(stock)
+                }
+            )
+            }
+
+            showLoading(false)
+        }
+    }
+
+    private fun showLoading(isLoading: Boolean) {
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.homeRecyclerView.visibility = if (isLoading) View.GONE else View.VISIBLE
     }
 }

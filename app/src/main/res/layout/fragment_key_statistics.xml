@@ -1,0 +1,38 @@
+<LinearLayout
+    android:id="@+id/keyStatisticsLayout"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:text="Key Statistics"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <include
+        layout="@layout/view_detail_section"
+        android:id="@+id/valuationSection" />
+
+    <include
+        layout="@layout/view_detail_section"
+        android:id="@+id/growthSection" />
+
+    <include
+        layout="@layout/view_detail_section"
+        android:id="@+id/sharesSection" />
+
+    <include
+        layout="@layout/view_detail_section"
+        android:id="@+id/shortInterestSection" />
+
+
+    <include
+        layout="@layout/view_detail_section"
+        android:id="@+id/bookAndHistoricalSection" />
+
+
+</LinearLayout>

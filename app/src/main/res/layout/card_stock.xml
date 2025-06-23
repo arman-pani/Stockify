@@ -12,6 +12,7 @@
         android:layout_width="45dp"
         android:layout_height="45dp"
         android:src="@drawable/add"
+        android:scaleType="centerCrop"
         android:background="@drawable/imageview_logo_bg"
         android:contentDescription="@null" />
 

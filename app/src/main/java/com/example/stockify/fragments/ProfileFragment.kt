@@ -1,20 +1,32 @@
 package com.example.stockify.fragments
 
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.stockify.R
+import com.example.stockify.adapters.ProfileRowAdapter
+import com.example.stockify.databinding.FragmentProfileBinding
+import com.example.stockify.models.ProfileRowModel
 
 class ProfileFragment: Fragment(R.layout.fragment_profile) {
-    override fun onCreate(savedInstanceState: android.os.Bundle?) {
-        super.onCreate(savedInstanceState)
-        // Initialize any data or state here if needed
-    }
+    private lateinit var binding: FragmentProfileBinding
 
     override fun onCreateView(
         inflater: android.view.LayoutInflater,
         container: android.view.ViewGroup?,
         savedInstanceState: android.os.Bundle?
     ): android.view.View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_profile, container, false)
+        binding = FragmentProfileBinding.inflate(inflater, container, false)
+
+        val rows = listOf(
+            ProfileRowModel("Account", R.drawable.add),
+            ProfileRowModel("Watchlist", R.drawable.watchlist),
+            ProfileRowModel("Settings", R.drawable.add)
+        )
+
+        binding.profileRecyclerView.adapter = ProfileRowAdapter(rows)
+        binding.profileRecyclerView.layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+
+        return binding.root
+
     }
 }

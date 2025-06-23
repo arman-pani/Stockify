@@ -1,50 +1,71 @@
 package com.example.stockify.adapters
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.stockify.R
-import com.example.stockify.models.StockModel
+import com.example.stockify.databinding.CardStockBinding
+import com.example.stockify.databinding.CardWishlistBinding
+import com.example.stockify.room.WatchlistItemModel
+import com.example.stockify.utils.loadImage
 
-class WatchlistAdapter(private val watchlist: MutableList<StockModel>, private val onDelete: (Int) -> Unit): RecyclerView.Adapter<WatchlistAdapter.ViewHolder>(){
+class WatchlistAdapter(
+    private val watchlist: List<WatchlistItemModel>,
+    private val viewType: ViewType,
+): RecyclerView.Adapter<RecyclerView.ViewHolder>(){
 
-    class ViewHolder(val itemView: View): RecyclerView.ViewHolder(itemView){
-        val companyNameTextView: TextView = itemView.findViewById(R.id.companyNameTextView)
-        val companySymbolTextView: TextView = itemView.findViewById(R.id.companySymbolTextView)
-        val companyLogoImageView: ImageView = itemView.findViewById(R.id.companyLogoImageView)
-        val percentageTextView: TextView = itemView.findViewById(R.id.percentageTextView)
-        val stockPriceTextView: TextView = itemView.findViewById(R.id.stockPriceTextView)
+    enum class ViewType{
+        HORIZONTAL, VERTICAL
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.card_stock, parent, false)
+    inner class VerticalViewHolder(val binding: CardStockBinding) : RecyclerView.ViewHolder(binding.root)
+    inner class HorizontalViewHolder(val binding: CardWishlistBinding) : RecyclerView.ViewHolder(binding.root)
 
-        return ViewHolder(view)
+    override fun getItemViewType(position: Int): Int {
+        return viewType.ordinal
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = watchlist[position]
-        holder.companyNameTextView.text = item.companyName
-        holder.companySymbolTextView.text = item.companySymbol
-        if (item.percentage < 0) {
-            holder.percentageTextView.setTextColor(holder.itemView.context.getColor(R.color.red))
-            holder.percentageTextView.text = "-${kotlin.math.abs(item.percentage)}%"
-        } else {
-            holder.percentageTextView.setTextColor(holder.itemView.context.getColor(R.color.green))
-            holder.percentageTextView.text = "+${item.percentage}%"
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return when(ViewType.values()[viewType]){
+            ViewType.HORIZONTAL -> {
+                val binding = CardWishlistBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+                HorizontalViewHolder(binding)
+            }
+            ViewType.VERTICAL -> {
+                val binding = CardStockBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+                VerticalViewHolder(binding)
+            }
         }
-        holder.stockPriceTextView.text = "$${item.stockPrice}"
+    }
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val item = watchlist[position]
+        val context = holder.itemView.context
+
+        when(holder){
+            is HorizontalViewHolder -> {
+                holder.binding.apply {
+                    companyNameTextView.text = item.companyName
+                    companySymbolTextView.text = item.companySymbol
+                    percentageTextView.setTextColor(context.getColor(if (item.percentage < 0) R.color.red else R.color.green))
+                    percentageTextView.text = (if (item.percentage < 0) "-" else "+") + "${kotlin.math.abs(item.percentage)}%"
+                    companyLogoImageView.loadImage(item.companyLogo)
+                }
+        }
+            is VerticalViewHolder -> {
+                holder.binding.apply {
+                    companyNameTextView.text = item.companyName
+                    companySymbolTextView.text = item.companySymbol
+                    stockPriceTextView.text = "$${item.stockValue}"
+                    percentageTextView.setTextColor(context.getColor(if (item.percentage < 0) R.color.red else R.color.green))
+                    percentageTextView.text = (if (item.percentage < 0) "-" else "+") + "${kotlin.math.abs(item.percentage)}%"
+                    companyLogoImageView.loadImage(item.companyLogo)
+                }
+            }
+        }
     }
 
     override fun getItemCount() = watchlist.size
 
-    fun removeItem(position: Int) {
-        watchlist.removeAt(position)
-        notifyItemRemoved(position)
-    }
 
 }
